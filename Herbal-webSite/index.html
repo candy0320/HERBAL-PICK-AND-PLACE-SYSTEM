@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Herbal Pick-and-Place System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f2016;
+      --panel: #11281d;
+      --text: #e6f2e9;
+      --muted: #9bb39d;
+      --accent: #19c37d;
+      --accent-2: #1d9b61;
+      --warn: #f5a524;
+      --danger: #d63d3d;
+      --danger-dark: #a32222;
+      --border: #1f3a2b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 20px 28px;
+      background: #0a1a12;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .brand { font-weight: 700; letter-spacing: 0.6px; }
+    .tabs {
+      display: flex;
+      gap: 6px;
+    }
+    .tab {
+      padding: 12px 20px;
+      border-radius: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab.active {
+      background: #124f32;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+      padding: 18px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 12px;
+      color: var(--text);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .section-title small { color: var(--muted); font-weight: 500; }
+    .assign {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .field {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+    }
+    .field input {
+      width: 100%;
+      padding: 14px 48px 14px 42px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0b2016;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+    .field .icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 18px;
+      pointer-events: none;
+    }
+    .select-btn {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      border: none;
+      background: #123422;
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-primary {
+      background: #179e62;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 20px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 10px 20px rgba(23,158,98,0.25);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(23,158,98,0.32); }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table th, .table td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .table th { color: var(--muted); font-weight: 600; letter-spacing: 0.3px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: #0b1a13;
+      border: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .dot.green { background: #1ccf83; box-shadow: 0 0 0 4px rgba(28,207,131,0.18); }
+    .dot.yellow { background: #f5c045; box-shadow: 0 0 0 4px rgba(245,192,69,0.18); }
+    .dot.red { background: #ff5555; box-shadow: 0 0 0 4px rgba(255,85,85,0.18); }
+    .queue-card { overflow: hidden; }
+    .live {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #081511;
+      border: 1px solid var(--border);
+      min-height: 260px;
+      margin-bottom: 14px;
+    }
+    .live img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      display: block;
+      filter: saturate(1.1);
+    }
+    .live .pill {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      background: #ff3b30;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 14px;
+      font-weight: 700;
+      box-shadow: 0 10px 18px rgba(255,59,48,0.35);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      background: #0b1a13;
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      border-radius: 14px;
+    }
+    .status-label { font-weight: 600; font-size: 17px; }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 15px;
+      color: #22c674;
+      background: rgba(28,207,131,0.08);
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .controls button {
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-weight: 700;
+      font-size: 17px;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s;
+    }
+    .controls .start { background: #17c769; color: #fff; box-shadow: 0 10px 20px rgba(23,199,105,0.22); }
+    .controls .pause { background: #1f3027; color: var(--text); }
+    .controls .stop { background: #122219; color: #fff; grid-column: 1 / span 2; }
+    .controls .emergency { background: var(--danger); color: #fff; grid-column: 1 / span 2; box-shadow: 0 12px 24px rgba(214,61,61,0.32); }
+    .controls button:hover { transform: translateY(-1px); }
+    .controls button:active { transform: translateY(0); }
+    .flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .pill-filter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      background: #0b1b13;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #0f2419;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 16px 30px rgba(0,0,0,0.35);
+      max-height: 220px;
+      overflow: auto;
+      z-index: 3;
+      display: none;
+    }
+    .dropdown.open { display: block; }
+    .dropdown-item {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:hover { background: rgba(28,207,131,0.08); }
+    .inventory-tag {
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(28,207,131,0.12);
+      color: #20c173;
+      border: 1px solid rgba(28,207,131,0.3);
+      font-weight: 600;
+      font-size: 12px;
+    }
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #0d1f15;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.4);
+      display: none;
+      min-width: 220px;
+      z-index: 4;
+    }
+    .toast.show { display: block; animation: fade 3s ease forwards; }
+    @keyframes fade { 0% { opacity: 0; transform: translateY(10px);} 10% { opacity:1; transform: translateY(0);} 80% {opacity:1;} 100% { opacity: 0; transform: translateY(8px);} }
+    @media (max-width: 1024px) {
+      .layout { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr; }
+      .controls .stop, .controls .emergency { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">HERBAL PICK-AND-PLACE SYSTEM</div>
+    <nav class="tabs" aria-label="Primary navigation">
+      <div class="tab active">Dashboard</div>
+      <div class="tab">Tasks</div>
+      <div class="tab">Inventory</div>
+      <div class="tab">Inventory</div>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="card queue-card">
+      <h2 class="section-title">Task Assignment <small>醫師開藥</small></h2>
+      <div class="assign">
+        <div class="field">
+          <span class="icon">🔍</span>
+          <input id="searchInput" autocomplete="off" placeholder="Search or select medicine..." />
+          <button class="select-btn" id="toggleDropdown" aria-label="Open list">▼</button>
+          <div class="dropdown" id="dropdownList" role="listbox"></div>
+        </div>
+        <button class="btn-primary" id="addQueue">Add to Queue</button>
+      </div>
+
+      <h3 class="section-title">Bath Queue <small>任務佇列</small></h3>
+      <div class="flex" style="margin-bottom: 10px;">
+        <div class="pill-filter" data-filter="all">All</div>
+        <div class="pill-filter" data-filter="pending">Pending</div>
+        <div class="pill-filter" data-filter="processing">Processing</div>
+        <div class="pill-filter" data-filter="done">Done</div>
+      </div>
+
+      <table class="table" aria-label="Bath queue list">
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody id="queueBody"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Live Feed</h2>
+      <div class="live">
+        <img src="https://images.unsplash.com/photo-1581093588401-9b6c00b0eac5?auto=format&fit=crop&w=1200&q=80" alt="Robot arm live feed" />
+        <div class="pill"><span class="dot red"></span>LIVE</div>
+      </div>
+
+      <div class="status-row">
+        <div class="status-label">System Status</div>
+        <div class="status-chip" id="systemChip"><span class="dot green"></span><span id="systemText">Running</span></div>
+      </div>
+
+      <div class="controls">
+        <button class="start" data-status="Running">Start</button>
+        <button class="pause" data-status="Paused">Pause</button>
+        <button class="stop" data-status="Stopped">Stop</button>
+        <button class="emergency" data-status="Emergency Stop">Emergency Stop</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const herbs = [
+      { name: 'Ginseng (人參)', stock: 'Not Returned', status: 'processing', invOk: false },
+      { name: 'Angelica (當歸)', stock: 'IN Stock', status: 'pending', invOk: true },
+      { name: 'Astragalus (黃耆)', stock: 'IN Stock', status: 'pending', invOk: true },
+      { name: 'Licorice (甘草)', stock: 'IN Stock', status: 'pending', invOk: true },
+      { name: 'Ginger (生薑)', stock: 'Low Stock', status: 'pending', invOk: false }
+    ];
+    let queue = [
+      { id: '001', name: 'Ginseng (人參)', status: 'processing', stock: 'Not Returned', invOk: false },
+      { id: '002', name: 'Angelica (當歸)', status: 'pending', stock: 'IN Stock', invOk: true }
+    ];
+    let filter = 'all';
+
+    const dropdown = document.getElementById('dropdownList');
+    const searchInput = document.getElementById('searchInput');
+    const queueBody = document.getElementById('queueBody');
+    const toast = document.getElementById('toast');
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    function renderDropdown(list) {
+      dropdown.innerHTML = '';
+      list.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'dropdown-item';
+        el.setAttribute('role', 'option');
+        el.innerHTML = \`
+          <span>\${item.name}</span>
+          <span class="inventory-tag">\${item.stock}</span>
+        \`;
+        el.onclick = () => {
+          searchInput.value = item.name;
+          dropdown.classList.remove('open');
+        };
+        dropdown.appendChild(el);
+      });
+      dropdown.classList.toggle('open', list.length > 0);
+    }
+
+    function renderQueue() {
+      queueBody.innerHTML = '';
+      const filtered = queue.filter(item => filter === 'all' ? true : item.status === filter);
+      filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = \`
+          <td>\${item.id}</td>
+          <td>\${item.name}</td>
+          <td>
+            <span class="badge">\${statusDot(item.status)} \${capitalize(item.status)}</span>
+          </td>
+          <td>
+            <span class="badge">\${item.invOk ? '<span class="dot green"></span> IN Stock' : '<span class="dot red"></span> Not Returned'}</span>
+          </td>
+        \`;
+        queueBody.appendChild(tr);
+      });
+    }
+
+    function statusDot(status) {
+      const map = { processing: 'yellow', pending: 'yellow', done: 'green', stopped: 'red' };
+      return \`<span class="dot \${map[status] || 'yellow'}"></span>\`;
+    }
+    function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+    function addToQueue() {
+      const value = searchInput.value.trim();
+      if (!value) { showToast('Select a medicine first.'); return; }
+      const herb = herbs.find(h => h.name.toLowerCase() === value.toLowerCase());
+      const id = String(queue.length + 1).padStart(3, '0');
+      const entry = {
+        id,
+        name: value,
+        status: 'pending',
+        stock: herb?.stock || 'IN Stock',
+        invOk: herb?.invOk ?? true
+      };
+      queue.push(entry);
+      searchInput.value = '';
+      dropdown.classList.remove('open');
+      renderQueue();
+      showToast(\`Added \${value} to queue\`);
+    }
+
+    function setSystemStatus(state) {
+      const chip = document.getElementById('systemChip');
+      const text = document.getElementById('systemText');
+      const dot = chip.querySelector('.dot');
+      text.textContent = state;
+      chip.style.color = '#22c674';
+      chip.style.background = 'rgba(28,207,131,0.08)';
+      dot.className = 'dot green';
+      if (state === 'Paused') { dot.className = 'dot yellow'; }
+      if (state === 'Stopped') { dot.className = 'dot red'; chip.style.color = '#ff8b8b'; chip.style.background = 'rgba(255,85,85,0.08)'; }
+      if (state === 'Emergency Stop') { dot.className = 'dot red'; chip.style.color = '#ff7676'; chip.style.background = 'rgba(255,85,85,0.14)'; }
+      showToast(\`System: \${state}\`);
+    }
+
+    function handleControls() {
+      document.querySelectorAll('.controls button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setSystemStatus(btn.dataset.status);
+          if (btn.dataset.status === 'Running') {
+            // mark the first pending item as processing
+            const next = queue.find(item => item.status === 'pending');
+            if (next) { next.status = 'processing'; renderQueue(); }
+          }
+        });
+      });
+    }
+
+    function initFilters() {
+      document.querySelectorAll('.pill-filter').forEach(el => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('.pill-filter').forEach(p => p.style.borderColor = varBorder(p === el));
+          filter = el.dataset.filter;
+          renderQueue();
+        });
+      });
+      function varBorder(active) { return active ? '#19c37d' : '#1f3a2b'; }
+    }
+
+    function setupSearch() {
+      const toggle = document.getElementById('toggleDropdown');
+      toggle.onclick = () => {
+        renderDropdown(herbs);
+        dropdown.classList.toggle('open');
+      };
+      searchInput.addEventListener('input', () => {
+        const term = searchInput.value.toLowerCase();
+        const list = herbs.filter(h => h.name.toLowerCase().includes(term));
+        renderDropdown(list);
+      });
+      document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && e.target !== toggle && e.target !== searchInput) {
+          dropdown.classList.remove('open');
+        }
+      });
+    }
+
+    function init() {
+      renderDropdown(herbs);
+      renderQueue();
+      setupSearch();
+      handleControls();
+      initFilters();
+      document.getElementById('addQueue').addEventListener('click', addToQueue);
+      setSystemStatus('Running');
+    }
+
+    init();
+  </script>
+</body>
+</html>
+
